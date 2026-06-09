@@ -7,10 +7,17 @@ import WorldMapPage from './pages/WorldMapPage'
 function App() {
   const [currentPage, setCurrentPage] = useState('home')
   const [selectedStage, setSelectedStage] = useState(null)
+  const [result, setResult] = useState(null)
 
   function openBattle(stage) {
     setSelectedStage(stage)
+    setResult(null)
     setCurrentPage('battle')
+  }
+
+  function completeBattle(battleResult) {
+    setResult(battleResult)
+    setCurrentPage('result')
   }
 
   if (currentPage === 'worldMap') {
@@ -27,7 +34,7 @@ function App() {
       <BattlePage
         stage={selectedStage}
         onBack={() => setCurrentPage('worldMap')}
-        onComplete={() => setCurrentPage('result')}
+        onComplete={completeBattle}
       />
     )
   }
@@ -35,7 +42,12 @@ function App() {
   if (currentPage === 'result') {
     return (
       <ResultPage
-        onPlayAgain={() => setCurrentPage('worldMap')}
+        result={result}
+        onPlayAgain={() => {
+          setResult(null)
+          setCurrentPage('battle')
+        }}
+        onWorldMap={() => setCurrentPage('worldMap')}
         onHome={() => setCurrentPage('home')}
       />
     )
