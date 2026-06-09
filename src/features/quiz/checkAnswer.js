@@ -1,3 +1,3 @@
-export function checkAnswer(selectedAnswer, correctAnswer) {
-  return selectedAnswer === correctAnswer
+export function checkAnswer(option) {
+  return Boolean(option?.isCorrect)
 }

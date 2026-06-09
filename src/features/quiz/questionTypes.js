@@ -1,3 +1,4 @@
 export const QUESTION_TYPES = {
-  MULTIPLE_CHOICE: 'multipleChoice',
+  ZH_TO_EN: 'zh_to_en',
+  EN_TO_ZH: 'en_to_zh',
 }
