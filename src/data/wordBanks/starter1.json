@@ -1,0 +1,14 @@
+[
+  {
+    "id": "starter-apple",
+    "word": "apple",
+    "meaning": "蘋果",
+    "options": ["apple", "book", "cat", "dog"]
+  },
+  {
+    "id": "starter-book",
+    "word": "book",
+    "meaning": "書",
+    "options": ["dog", "book", "apple", "cat"]
+  }
+]

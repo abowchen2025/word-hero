@@ -1,0 +1,34 @@
+[
+  {
+    "id": "starter-village",
+    "name": "Starter Village",
+    "nameZh": "入門村",
+    "description": "從生活中最常見的英文單字開始。",
+    "theme": "amber",
+    "badge": "SV"
+  },
+  {
+    "id": "animal-forest",
+    "name": "Animal Forest",
+    "nameZh": "動物森林",
+    "description": "認識可愛又勇敢的動物夥伴。",
+    "theme": "emerald",
+    "badge": "AF"
+  },
+  {
+    "id": "food-town",
+    "name": "Food Town",
+    "nameZh": "食物小鎮",
+    "description": "收集餐桌與點心店裡的單字。",
+    "theme": "rose",
+    "badge": "FT"
+  },
+  {
+    "id": "school-castle",
+    "name": "School Castle",
+    "nameZh": "學校城堡",
+    "description": "挑戰每天在學校會用到的英文。",
+    "theme": "blue",
+    "badge": "SC"
+  }
+]

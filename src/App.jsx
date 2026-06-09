@@ -1,11 +1,47 @@
+import { useState } from 'react'
+import BattlePage from './pages/BattlePage'
+import HomePage from './pages/HomePage'
+import ResultPage from './pages/ResultPage'
+import WorldMapPage from './pages/WorldMapPage'
+
 function App() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
-      <h1 className="rounded-xl bg-blue-100 p-6 text-3xl font-bold text-blue-900">
-        Word Hero 英文小勇者
-      </h1>
-    </main>
-  )
+  const [currentPage, setCurrentPage] = useState('home')
+  const [selectedStage, setSelectedStage] = useState(null)
+
+  function openBattle(stage) {
+    setSelectedStage(stage)
+    setCurrentPage('battle')
+  }
+
+  if (currentPage === 'worldMap') {
+    return (
+      <WorldMapPage
+        onSelectStage={openBattle}
+        onHome={() => setCurrentPage('home')}
+      />
+    )
+  }
+
+  if (currentPage === 'battle') {
+    return (
+      <BattlePage
+        stage={selectedStage}
+        onBack={() => setCurrentPage('worldMap')}
+        onComplete={() => setCurrentPage('result')}
+      />
+    )
+  }
+
+  if (currentPage === 'result') {
+    return (
+      <ResultPage
+        onPlayAgain={() => setCurrentPage('worldMap')}
+        onHome={() => setCurrentPage('home')}
+      />
+    )
+  }
+
+  return <HomePage onStart={() => setCurrentPage('worldMap')} />
 }
 
 export default App
