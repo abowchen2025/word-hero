@@ -8,10 +8,12 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home')
   const [selectedStage, setSelectedStage] = useState(null)
   const [result, setResult] = useState(null)
+  const [battleMode, setBattleMode] = useState('normal')
 
   function openBattle(stage) {
     setSelectedStage(stage)
     setResult(null)
+    setBattleMode('normal')
     setCurrentPage('battle')
   }
 
@@ -33,6 +35,7 @@ function App() {
     return (
       <BattlePage
         stage={selectedStage}
+        battleMode={battleMode}
         onBack={() => setCurrentPage('worldMap')}
         onComplete={completeBattle}
       />
@@ -43,8 +46,14 @@ function App() {
     return (
       <ResultPage
         result={result}
+        battleMode={battleMode}
         onPlayAgain={() => {
           setResult(null)
+          setCurrentPage('battle')
+        }}
+        onReviewMistakes={() => {
+          setResult(null)
+          setBattleMode('review')
           setCurrentPage('battle')
         }}
         onWorldMap={() => setCurrentPage('worldMap')}

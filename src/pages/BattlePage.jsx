@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import AnswerOption from '../components/AnswerOption'
 import HeroCard from '../components/HeroCard'
 import MonsterCard from '../components/MonsterCard'
@@ -6,24 +6,67 @@ import QuestionCard from '../components/QuestionCard'
 import starterWords from '../data/wordBanks/starter1.json'
 import { checkAnswer } from '../features/quiz/checkAnswer'
 import { generateQuestion } from '../features/quiz/generateQuestion'
+import { getMistakeBook } from '../features/review/mistakeBook'
+import { useKeyboardControls } from '../hooks/useKeyboardControls'
 
-const TOTAL_QUESTIONS = 10
+const NORMAL_QUESTION_COUNT = 10
 const MONSTER_MAX_HEALTH = 100
-const DAMAGE_PER_QUESTION = MONSTER_MAX_HEALTH / TOTAL_QUESTIONS
 
-function createQuestion() {
+function createNormalQuestion() {
   return generateQuestion(starterWords)
 }
 
-function calculateStars(correctCount) {
-  if (correctCount >= 9) return 3
-  if (correctCount >= 6) return 2
+function shuffle(items) {
+  const shuffledItems = [...items]
+
+  for (let index = shuffledItems.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1))
+    ;[shuffledItems[index], shuffledItems[randomIndex]] = [
+      shuffledItems[randomIndex],
+      shuffledItems[index],
+    ]
+  }
+
+  return shuffledItems
+}
+
+function createBattleSetup(battleMode) {
+  if (battleMode !== 'review') {
+    return {
+      reviewWords: [],
+      totalQuestions: NORMAL_QUESTION_COUNT,
+      firstQuestion: createNormalQuestion(),
+    }
+  }
+
+  const mistakeIds = new Set(
+    getMistakeBook().map((mistake) => mistake.wordId),
+  )
+  const reviewWords = shuffle(
+    starterWords.filter((word) => mistakeIds.has(word.id)),
+  ).slice(0, NORMAL_QUESTION_COUNT)
+
+  return {
+    reviewWords,
+    totalQuestions: reviewWords.length,
+    firstQuestion:
+      reviewWords.length > 0
+        ? generateQuestion([reviewWords[0]], starterWords)
+        : null,
+  }
+}
+
+function calculateStars(correctCount, totalQuestions) {
+  if (totalQuestions > 0 && correctCount / totalQuestions >= 0.9) return 3
+  if (totalQuestions > 0 && correctCount / totalQuestions >= 0.6) return 2
   if (correctCount >= 1) return 1
   return 0
 }
 
-function BattlePage({ stage, onComplete, onBack }) {
-  const [question, setQuestion] = useState(createQuestion)
+function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
+  const [battleSetup] = useState(() => createBattleSetup(battleMode))
+  const { reviewWords, totalQuestions, firstQuestion } = battleSetup
+  const [question, setQuestion] = useState(firstQuestion)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(1)
   const [score, setScore] = useState(0)
   const [correctCount, setCorrectCount] = useState(0)
@@ -35,14 +78,23 @@ function BattlePage({ stage, onComplete, onBack }) {
   const [selectedAnswers, setSelectedAnswers] = useState([])
   const [hadMistake, setHadMistake] = useState(false)
   const [monsterHealth, setMonsterHealth] = useState(MONSTER_MAX_HEALTH)
+  const answerLockedRef = useRef(false)
+  const nextActionLockedRef = useRef(false)
 
-  const progress = (currentQuestionIndex / TOTAL_QUESTIONS) * 100
+  const progress =
+    totalQuestions > 0 ? (currentQuestionIndex / totalQuestions) * 100 : 0
+  const damagePerQuestion =
+    totalQuestions > 0 ? MONSTER_MAX_HEALTH / totalQuestions : 0
 
   function handleAnswer(option) {
-    if (answeredCorrectly) return
+    if (answeredCorrectly || answerLockedRef.current) return
 
     const isCorrect = checkAnswer(option)
     const nextSelectedAnswers = [...selectedAnswers, option.label]
+
+    if (isCorrect) {
+      answerLockedRef.current = true
+    }
 
     setSelectedOption(option)
     setSelectedAnswers(nextSelectedAnswers)
@@ -69,13 +121,15 @@ function BattlePage({ stage, onComplete, onBack }) {
           wordId: wordEntry.id,
           word: wordEntry.word,
           zh_tw: wordEntry.zh_tw,
+          theme: wordEntry.theme,
+          level: wordEntry.level,
           isCorrectFirstTry: !hadMistake,
           hadMistake,
           selectedAnswers: nextSelectedAnswers,
         },
       ])
       setMonsterHealth((health) =>
-        Math.max(0, health - DAMAGE_PER_QUESTION),
+        Math.max(0, health - damagePerQuestion),
       )
     } else if (!hadMistake) {
       setHadMistake(true)
@@ -84,30 +138,77 @@ function BattlePage({ stage, onComplete, onBack }) {
   }
 
   function handleNextQuestion() {
-    if (currentQuestionIndex === TOTAL_QUESTIONS) {
+    if (!answeredCorrectly || nextActionLockedRef.current) return
+
+    nextActionLockedRef.current = true
+
+    if (currentQuestionIndex === totalQuestions) {
       onComplete({
         score,
-        totalQuestions: TOTAL_QUESTIONS,
+        totalQuestions,
         correctCount,
         wrongCount,
-        stars: calculateStars(correctCount),
+        stars: calculateStars(correctCount, totalQuestions),
         answerHistory,
       })
       return
     }
 
-    setQuestion(createQuestion())
+    setQuestion(
+      battleMode === 'review'
+        ? generateQuestion([reviewWords[currentQuestionIndex]], starterWords)
+        : createNormalQuestion(),
+    )
     setCurrentQuestionIndex((index) => index + 1)
     setSelectedOption(null)
     setSelectedAnswers([])
     setHadMistake(false)
     setFeedback('')
     setAnsweredCorrectly(false)
+    answerLockedRef.current = false
+    nextActionLockedRef.current = false
   }
 
   function getAnswerStatus(option) {
     if (selectedOption?.id !== option.id) return 'idle'
     return option.isCorrect ? 'correct' : 'wrong'
+  }
+
+  useKeyboardControls({
+    onAnswer: (optionIndex) => {
+      const option = question?.options[optionIndex]
+
+      if (option) {
+        handleAnswer(option)
+      }
+    },
+    onEnter: handleNextQuestion,
+    enabled: Boolean(question),
+  })
+
+  if (!question) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-linear-to-b from-blue-50 to-slate-100 px-5 py-12">
+        <section className="w-full max-w-xl rounded-3xl border-2 border-blue-200 bg-white p-7 text-center shadow-xl shadow-blue-100 sm:p-10">
+          <p className="text-sm font-black tracking-[0.2em] text-blue-600 uppercase">
+            Review Quest
+          </p>
+          <h1 className="mt-3 text-3xl font-black text-slate-950">
+            目前沒有錯題
+          </h1>
+          <p className="mt-4 text-lg font-bold text-slate-600">
+            先去完成一關冒險吧！
+          </p>
+          <button
+            type="button"
+            className="mt-7 min-h-16 w-full touch-manipulation rounded-2xl bg-blue-600 px-6 py-4 text-lg font-black text-white hover:bg-blue-700 active:bg-blue-800"
+            onClick={onBack}
+          >
+            回世界地圖
+          </button>
+        </section>
+      </main>
+    )
   }
 
   return (
@@ -116,11 +217,12 @@ function BattlePage({ stage, onComplete, onBack }) {
         <header className="mb-6 flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-black tracking-[0.2em] text-blue-600 uppercase">
-              Current Quest
+              {battleMode === 'review' ? 'Review Quest' : 'Current Quest'}
             </p>
             <h1 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">
-              {stage?.name ?? 'Starter Village'}{' '}
-              {stage?.nameZh ?? '新手村'}
+              {battleMode === 'review'
+                ? '錯題複習'
+                : `${stage?.name ?? 'Starter Village'} ${stage?.nameZh ?? '新手村'}`}
             </h1>
           </div>
           <button
@@ -135,7 +237,7 @@ function BattlePage({ stage, onComplete, onBack }) {
         <section className="mb-6 rounded-3xl border-2 border-blue-200 bg-white p-5 shadow-lg shadow-blue-100">
           <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 font-black">
             <p className="text-lg text-slate-950">
-              第 {currentQuestionIndex} / {TOTAL_QUESTIONS} 題
+              第 {currentQuestionIndex} / {totalQuestions} 題
             </p>
             <div className="flex gap-5 text-sm sm:text-base">
               <p className="text-blue-700">分數：{score}</p>
@@ -147,7 +249,7 @@ function BattlePage({ stage, onComplete, onBack }) {
             role="progressbar"
             aria-label="關卡進度"
             aria-valuemin="0"
-            aria-valuemax={TOTAL_QUESTIONS}
+            aria-valuemax={totalQuestions}
             aria-valuenow={currentQuestionIndex}
           >
             <div
@@ -167,10 +269,20 @@ function BattlePage({ stage, onComplete, onBack }) {
 
         <div className="mt-6">
           <QuestionCard prompt={question.prompt}>
+            <div className="mb-4 hidden items-center justify-end gap-2 text-xs font-bold text-slate-600 sm:flex">
+              <span className="rounded-lg bg-white/80 px-3 py-2">
+                按 1～4 選答案
+              </span>
+              <span className="rounded-lg bg-white/80 px-3 py-2">
+                Enter {currentQuestionIndex === totalQuestions ? '完成任務' : '下一題'}
+              </span>
+            </div>
+
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {question.options.map((option) => (
+              {question.options.map((option, optionIndex) => (
                 <AnswerOption
                   key={option.id}
+                  number={optionIndex + 1}
                   label={option.label}
                   status={getAnswerStatus(option)}
                   disabled={answeredCorrectly}
@@ -195,10 +307,10 @@ function BattlePage({ stage, onComplete, onBack }) {
             {answeredCorrectly && (
               <button
                 type="button"
-                className="mt-5 min-h-14 w-full rounded-2xl bg-blue-600 px-6 py-4 text-lg font-black text-white shadow-lg shadow-blue-200 hover:bg-blue-700"
+                className="mt-5 min-h-16 w-full touch-manipulation rounded-2xl bg-blue-600 px-6 py-4 text-lg font-black text-white shadow-lg shadow-blue-200 hover:bg-blue-700 active:bg-blue-800 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
                 onClick={handleNextQuestion}
               >
-                {currentQuestionIndex === TOTAL_QUESTIONS
+                {currentQuestionIndex === totalQuestions
                   ? '完成任務'
                   : '下一題'}
               </button>

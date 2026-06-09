@@ -33,9 +33,13 @@ function getAvailableTypes(wordEntry) {
   )
 }
 
-export function generateQuestion(wordBank) {
-  if (!Array.isArray(wordBank) || wordBank.length < OPTION_COUNT) {
-    throw new Error('題目產生器至少需要 4 個單字。')
+export function generateQuestion(wordBank, optionWordBank = wordBank) {
+  if (!Array.isArray(wordBank) || wordBank.length === 0) {
+    throw new Error('題目產生器至少需要 1 個正解單字。')
+  }
+
+  if (!Array.isArray(optionWordBank) || optionWordBank.length < OPTION_COUNT) {
+    throw new Error('題目產生器至少需要 4 個選項單字。')
   }
 
   const eligibleWords = wordBank.filter(
@@ -51,7 +55,7 @@ export function generateQuestion(wordBank) {
   const correctLabel = getLabel(correctWord, type)
   const usedLabels = new Set([correctLabel])
   const distractors = shuffle(
-    wordBank.filter((wordEntry) => wordEntry.id !== correctWord.id),
+    optionWordBank.filter((wordEntry) => wordEntry.id !== correctWord.id),
   )
     .filter((wordEntry) => {
       const label = getLabel(wordEntry, type)

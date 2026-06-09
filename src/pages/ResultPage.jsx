@@ -1,3 +1,10 @@
+import { useEffect, useRef, useState } from 'react'
+import {
+  clearMistakeBook,
+  getMistakeBook,
+  saveMistakesFromHistory,
+} from '../features/review/mistakeBook'
+
 const emptyResult = {
   score: 0,
   totalQuestions: 10,
@@ -7,11 +14,38 @@ const emptyResult = {
   answerHistory: [],
 }
 
-function ResultPage({ result = emptyResult, onPlayAgain, onWorldMap, onHome }) {
+function ResultPage({
+  result = emptyResult,
+  battleMode = 'normal',
+  onPlayAgain,
+  onReviewMistakes,
+  onWorldMap,
+  onHome,
+}) {
   const battleResult = result ?? emptyResult
-  const reviewWords = battleResult.answerHistory.filter(
-    (answer) => answer.hadMistake,
+  const reviewWords = Array.from(
+    new Map(
+      battleResult.answerHistory
+        .filter((answer) => answer.hadMistake)
+        .map((answer) => [answer.wordId, answer]),
+    ).values(),
   )
+  const [mistakeBook, setMistakeBook] = useState(getMistakeBook)
+  const hasSavedResultRef = useRef(false)
+
+  useEffect(() => {
+    if (hasSavedResultRef.current) return
+
+    hasSavedResultRef.current = true
+    setMistakeBook(saveMistakesFromHistory(battleResult.answerHistory))
+  }, [battleResult.answerHistory])
+
+  function handleClearMistakeBook() {
+    if (!window.confirm('確定要清空錯題本嗎？')) return
+
+    clearMistakeBook()
+    setMistakeBook([])
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-blue-950 px-5 py-12">
@@ -22,7 +56,9 @@ function ResultPage({ result = emptyResult, onPlayAgain, onWorldMap, onHome }) {
         <p className="mt-6 text-sm font-black tracking-[0.2em] text-blue-600 uppercase">
           Quest Clear
         </p>
-        <h1 className="mt-2 text-4xl font-black text-slate-950">任務完成！</h1>
+        <h1 className="mt-2 text-4xl font-black text-slate-950">
+          {battleMode === 'review' ? '錯題複習完成！' : '任務完成！'}
+        </h1>
         <p className="mt-4 text-xl font-bold text-slate-600">
           本次獲得{' '}
           <span className="text-amber-500">{battleResult.stars} 顆星</span>
@@ -51,11 +87,11 @@ function ResultPage({ result = emptyResult, onPlayAgain, onWorldMap, onHome }) {
 
         {reviewWords.length > 0 && (
           <section className="mt-6 rounded-2xl border-2 border-amber-200 bg-amber-50 p-5 text-left">
-            <h2 className="font-black text-amber-900">需要再複習：</h2>
+            <h2 className="font-black text-amber-900">本次需要複習：</h2>
             <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
               {reviewWords.map((answer) => (
                 <li
-                  key={answer.questionNumber}
+                  key={answer.wordId}
                   className="rounded-xl bg-white px-4 py-3 font-bold text-slate-800"
                 >
                   {answer.word} <span className="text-slate-500">{answer.zh_tw}</span>
@@ -64,6 +100,57 @@ function ResultPage({ result = emptyResult, onPlayAgain, onWorldMap, onHome }) {
             </ul>
           </section>
         )}
+
+        <section className="mt-6 rounded-2xl border-2 border-blue-200 bg-blue-50 p-5 text-left">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-black text-blue-950">本機錯題本</h2>
+            <p className="text-sm font-black text-blue-700">
+              共 {mistakeBook.length} 個單字
+            </p>
+          </div>
+
+          {mistakeBook.length > 0 ? (
+            <ul className="mt-3 space-y-2">
+              {mistakeBook.slice(0, 5).map((mistake) => (
+                <li
+                  key={mistake.wordId}
+                  className="rounded-xl bg-white px-4 py-3 font-bold text-slate-800"
+                >
+                  {mistake.word}{' '}
+                  <span className="text-slate-500">{mistake.zh_tw}</span>
+                  <span className="text-rose-600">
+                    {' '}
+                    ｜錯 {mistake.mistakeCount} 次
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 rounded-xl bg-white px-4 py-3 font-bold text-slate-600">
+              目前沒有需要複習的單字。
+            </p>
+          )}
+
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {mistakeBook.length > 0 && (
+              <button
+                type="button"
+                className="min-h-14 touch-manipulation rounded-2xl bg-blue-600 px-5 py-4 text-lg font-black text-white hover:bg-blue-700 active:bg-blue-800"
+                onClick={onReviewMistakes}
+              >
+                複習錯題
+              </button>
+            )}
+            <button
+              type="button"
+              className="min-h-14 touch-manipulation rounded-2xl border-2 border-rose-300 bg-white px-5 py-4 text-lg font-black text-rose-700 hover:bg-rose-50 active:bg-rose-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+              onClick={handleClearMistakeBook}
+              disabled={mistakeBook.length === 0}
+            >
+              清空錯題本
+            </button>
+          </div>
+        </section>
 
         <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <button
