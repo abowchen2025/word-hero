@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import AnswerOption from '../components/AnswerOption'
 import HeroCard from '../components/HeroCard'
 import MonsterCard from '../components/MonsterCard'
@@ -8,6 +8,7 @@ import { checkAnswer } from '../features/quiz/checkAnswer'
 import { generateQuestion } from '../features/quiz/generateQuestion'
 import { getMistakeBook } from '../features/review/mistakeBook'
 import { useKeyboardControls } from '../hooks/useKeyboardControls'
+import { useSpeech } from '../hooks/useSpeech'
 
 const NORMAL_QUESTION_COUNT = 10
 const MONSTER_MAX_HEALTH = 100
@@ -80,11 +81,21 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
   const [monsterHealth, setMonsterHealth] = useState(MONSTER_MAX_HEALTH)
   const answerLockedRef = useRef(false)
   const nextActionLockedRef = useRef(false)
+  const { speak, isSupported: isSpeechSupported, isSpeaking } = useSpeech()
 
   const progress =
     totalQuestions > 0 ? (currentQuestionIndex / totalQuestions) * 100 : 0
   const damagePerQuestion =
     totalQuestions > 0 ? MONSTER_MAX_HEALTH / totalQuestions : 0
+  const currentWord = question
+    ? starterWords.find((word) => word.id === question.correctWordId)
+    : null
+
+  function speakCurrentWord() {
+    if (currentWord) {
+      speak(currentWord.word)
+    }
+  }
 
   function handleAnswer(option) {
     if (answeredCorrectly || answerLockedRef.current) return
@@ -183,8 +194,15 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
       }
     },
     onEnter: handleNextQuestion,
+    onSpace: speakCurrentWord,
     enabled: Boolean(question),
   })
+
+  useEffect(() => {
+    if (currentWord) {
+      speak(currentWord.word)
+    }
+  }, [question?.id, currentWord, speak])
 
   if (!question) {
     return (
@@ -269,14 +287,37 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
 
         <div className="mt-6">
           <QuestionCard prompt={question.prompt}>
-            <div className="mb-4 hidden items-center justify-end gap-2 text-xs font-bold text-slate-600 sm:flex">
-              <span className="rounded-lg bg-white/80 px-3 py-2">
-                按 1～4 選答案
-              </span>
-              <span className="rounded-lg bg-white/80 px-3 py-2">
-                Enter {currentQuestionIndex === totalQuestions ? '完成任務' : '下一題'}
-              </span>
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <button
+                type="button"
+                className="min-h-16 touch-manipulation rounded-2xl bg-violet-600 px-6 py-4 text-lg font-black text-white shadow-lg shadow-violet-200 hover:bg-violet-700 active:bg-violet-800 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
+                onClick={speakCurrentWord}
+                disabled={!isSpeechSupported}
+              >
+                {isSpeaking ? '播放中…' : '聽發音'}
+              </button>
+
+              <div className="hidden flex-wrap justify-end gap-2 text-xs font-bold text-slate-600 sm:flex">
+                <span className="rounded-lg bg-white/80 px-3 py-2">
+                  按 1～4 選答案
+                </span>
+                <span className="rounded-lg bg-white/80 px-3 py-2">
+                  Enter {currentQuestionIndex === totalQuestions ? '完成任務' : '下一題'}
+                </span>
+                <span className="rounded-lg bg-white/80 px-3 py-2">
+                  Space 重播發音
+                </span>
+              </div>
             </div>
+
+            {!isSpeechSupported && (
+              <p
+                className="mb-4 rounded-2xl bg-slate-100 px-4 py-3 text-center font-bold text-slate-600"
+                role="status"
+              >
+                你的瀏覽器目前不支援發音功能
+              </p>
+            )}
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {question.options.map((option, optionIndex) => (
