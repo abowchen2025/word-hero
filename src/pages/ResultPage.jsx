@@ -12,6 +12,9 @@ const emptyResult = {
   wrongCount: 0,
   stars: 0,
   answerHistory: [],
+  maxCombo: 0,
+  totalDamage: 0,
+  defeatedMonsters: 0,
 }
 
 function ResultPage({
@@ -64,7 +67,7 @@ function ResultPage({
           <span className="text-amber-500">{battleResult.stars} 顆星</span>
         </p>
 
-        <dl className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <dl className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-2xl bg-blue-50 p-4">
             <dt className="text-sm font-bold text-blue-700">本次分數</dt>
             <dd className="mt-1 text-3xl font-black text-slate-950">
@@ -81,6 +84,24 @@ function ResultPage({
             <dt className="text-sm font-bold text-rose-700">答錯次數</dt>
             <dd className="mt-1 text-3xl font-black text-slate-950">
               {battleResult.wrongCount}
+            </dd>
+          </div>
+          <div className="rounded-2xl bg-amber-50 p-4">
+            <dt className="text-sm font-bold text-amber-700">最高 Combo</dt>
+            <dd className="mt-1 text-3xl font-black text-slate-950">
+              {battleResult.maxCombo ?? 0}
+            </dd>
+          </div>
+          <div className="rounded-2xl bg-violet-50 p-4">
+            <dt className="text-sm font-bold text-violet-700">總傷害</dt>
+            <dd className="mt-1 text-3xl font-black text-slate-950">
+              {battleResult.totalDamage ?? 0}
+            </dd>
+          </div>
+          <div className="rounded-2xl bg-cyan-50 p-4">
+            <dt className="text-sm font-bold text-cyan-700">擊退怪物</dt>
+            <dd className="mt-1 text-3xl font-black text-slate-950">
+              {battleResult.defeatedMonsters ?? 0}
             </dd>
           </div>
         </dl>

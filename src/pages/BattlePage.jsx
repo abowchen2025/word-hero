@@ -11,7 +11,7 @@ import { useKeyboardControls } from '../hooks/useKeyboardControls'
 import { useSpeech } from '../hooks/useSpeech'
 
 const NORMAL_QUESTION_COUNT = 10
-const MONSTER_MAX_HEALTH = 100
+const INITIAL_MONSTER_HP = 100
 
 function createNormalQuestion() {
   return generateQuestion(starterWords)
@@ -78,15 +78,20 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
   const [answerHistory, setAnswerHistory] = useState([])
   const [selectedAnswers, setSelectedAnswers] = useState([])
   const [hadMistake, setHadMistake] = useState(false)
-  const [monsterHealth, setMonsterHealth] = useState(MONSTER_MAX_HEALTH)
+  const [monsterMaxHp] = useState(INITIAL_MONSTER_HP)
+  const [monsterHp, setMonsterHp] = useState(INITIAL_MONSTER_HP)
+  const [combo, setCombo] = useState(0)
+  const [maxCombo, setMaxCombo] = useState(0)
+  const [battleMessage, setBattleMessage] = useState('')
+  const [lastDamage, setLastDamage] = useState(0)
+  const [totalDamage, setTotalDamage] = useState(0)
+  const [defeatedMonsters, setDefeatedMonsters] = useState(0)
   const answerLockedRef = useRef(false)
   const nextActionLockedRef = useRef(false)
   const { speak, isSupported: isSpeechSupported, isSpeaking } = useSpeech()
 
   const progress =
     totalQuestions > 0 ? (currentQuestionIndex / totalQuestions) * 100 : 0
-  const damagePerQuestion =
-    totalQuestions > 0 ? MONSTER_MAX_HEALTH / totalQuestions : 0
   const currentWord = question
     ? starterWords.find((word) => word.id === question.correctWordId)
     : null
@@ -110,17 +115,36 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
     setSelectedOption(option)
     setSelectedAnswers(nextSelectedAnswers)
     setAnsweredCorrectly(isCorrect)
-    setFeedback(
-      isCorrect ? '答對了！小勇者攻擊成功！' : '差一點，再試一次！',
-    )
 
     if (isCorrect) {
       const pointsEarned = hadMistake ? 5 : 10
+      const nextCombo = combo + 1
+      const comboBonus = nextCombo >= 5 ? 5 : nextCombo >= 3 ? 3 : 0
+      const damage = pointsEarned + comboBonus
+      const nextMonsterHp = Math.max(0, monsterHp - damage)
       const wordEntry = starterWords.find(
         (word) => word.id === question.correctWordId,
       )
 
+      setFeedback('答對了！')
       setScore((currentScore) => currentScore + pointsEarned)
+      setCombo(nextCombo)
+      setMaxCombo((currentMaxCombo) =>
+        Math.max(currentMaxCombo, nextCombo),
+      )
+      setLastDamage(damage)
+      setTotalDamage((currentTotal) => currentTotal + damage)
+      setMonsterHp(nextMonsterHp)
+      setBattleMessage(
+        nextMonsterHp === 0
+          ? `答對了！小勇者造成 ${damage} 點傷害！怪物被擊退了！`
+          : comboBonus > 0
+            ? `答對了！小勇者造成 ${damage} 點傷害！Combo ${nextCombo}！追加傷害！`
+            : `答對了！小勇者造成 ${damage} 點傷害！`,
+      )
+      if (nextMonsterHp === 0) {
+        setDefeatedMonsters((count) => count + 1)
+      }
       if (!hadMistake) {
         setCorrectCount((count) => count + 1)
       }
@@ -137,14 +161,19 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
           isCorrectFirstTry: !hadMistake,
           hadMistake,
           selectedAnswers: nextSelectedAnswers,
+          damage,
+          combo: nextCombo,
         },
       ])
-      setMonsterHealth((health) =>
-        Math.max(0, health - damagePerQuestion),
-      )
-    } else if (!hadMistake) {
-      setHadMistake(true)
-      setWrongCount((count) => count + 1)
+    } else {
+      setFeedback('再試一次！')
+      setCombo(0)
+      setLastDamage(0)
+      setBattleMessage('怪物防禦成功，再試一次！')
+      if (!hadMistake) {
+        setHadMistake(true)
+        setWrongCount((count) => count + 1)
+      }
     }
   }
 
@@ -161,10 +190,14 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
         wrongCount,
         stars: calculateStars(correctCount, totalQuestions),
         answerHistory,
+        maxCombo,
+        totalDamage,
+        defeatedMonsters,
       })
       return
     }
 
+    const shouldResetMonster = monsterHp === 0
     setQuestion(
       battleMode === 'review'
         ? generateQuestion([reviewWords[currentQuestionIndex]], starterWords)
@@ -175,6 +208,13 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
     setSelectedAnswers([])
     setHadMistake(false)
     setFeedback('')
+    setLastDamage(0)
+    if (shouldResetMonster) {
+      setMonsterHp(monsterMaxHp)
+      setBattleMessage('新的小怪物出現！')
+    } else {
+      setBattleMessage('')
+    }
     setAnsweredCorrectly(false)
     answerLockedRef.current = false
     nextActionLockedRef.current = false
@@ -277,12 +317,31 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <HeroCard />
+        <section className="grid grid-cols-1 gap-5 md:grid-cols-2">
+          <HeroCard combo={combo} maxCombo={maxCombo} />
           <MonsterCard
-            health={monsterHealth}
-            maxHealth={MONSTER_MAX_HEALTH}
+            health={monsterHp}
+            maxHealth={monsterMaxHp}
           />
+        </section>
+
+        <section
+          className={`mt-5 min-h-20 rounded-3xl border-2 p-4 text-center ${
+            battleMessage
+              ? answeredCorrectly
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                : 'border-amber-200 bg-amber-50 text-amber-900'
+              : 'border-slate-200 bg-white/80 text-slate-500'
+          }`}
+          aria-live="polite"
+        >
+          <p className="font-black">
+            {battleMessage || '選出正確答案，幫助小勇者攻擊！'}
+          </p>
+          <div className="mt-2 flex flex-wrap justify-center gap-3 text-sm font-bold">
+            <span>Combo {combo}</span>
+            {lastDamage > 0 && <span>本次傷害 {lastDamage}</span>}
+          </div>
         </section>
 
         <div className="mt-6">
