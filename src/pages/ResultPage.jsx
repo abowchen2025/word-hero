@@ -4,6 +4,7 @@ import {
   getMistakeBook,
   saveMistakesFromHistory,
 } from '../features/review/mistakeBook'
+import { updatePlayerProgress } from '../features/player/playerProgress'
 import { calculateRewards } from '../features/reward/calculateRewards'
 
 const emptyResult = {
@@ -47,7 +48,10 @@ function ResultPage({
 
     hasSavedResultRef.current = true
     setMistakeBook(saveMistakesFromHistory(battleResult.answerHistory))
-  }, [battleResult.answerHistory])
+    if (!isReviewMode) {
+      updatePlayerProgress(battleResult, rewards)
+    }
+  }, [battleResult, isReviewMode, rewards])
 
   function handleClearMistakeBook() {
     if (!window.confirm('確定要清空錯題本嗎？')) return

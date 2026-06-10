@@ -1,4 +1,9 @@
+import { useState } from 'react'
 import stages from '../data/stages.json'
+import {
+  getPlayerProgress,
+  resetPlayerProgress,
+} from '../features/player/playerProgress'
 
 const themeClasses = {
   amber: 'border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-400',
@@ -9,6 +14,20 @@ const themeClasses = {
 }
 
 function WorldMapPage({ onSelectStage, onHome }) {
+  const [playerProgress, setPlayerProgress] = useState(getPlayerProgress)
+
+  function handleResetPlayerProgress() {
+    if (
+      !window.confirm(
+        '確定要重新開始勇者紀錄嗎？總金幣和徽章會清空。',
+      )
+    ) {
+      return
+    }
+
+    setPlayerProgress(resetPlayerProgress())
+  }
+
   return (
     <main className="min-h-screen bg-slate-100 px-5 py-8 sm:py-12">
       <div className="mx-auto max-w-5xl">
@@ -30,6 +49,49 @@ function WorldMapPage({ onSelectStage, onHome }) {
             回首頁
           </button>
         </header>
+
+        <section className="mb-8 rounded-3xl border-2 border-amber-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-black tracking-[0.2em] text-amber-700 uppercase">
+                Hero Record
+              </p>
+              <h2 className="mt-1 text-2xl font-black text-slate-950">
+                勇者紀錄
+              </h2>
+            </div>
+            <button
+              type="button"
+              className="min-h-12 rounded-xl border-2 border-rose-200 bg-rose-50 px-4 py-3 font-bold text-rose-700 hover:bg-rose-100 sm:w-auto"
+              onClick={handleResetPlayerProgress}
+            >
+              重置勇者紀錄
+            </button>
+          </div>
+
+          <dl className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl bg-amber-50 p-4 text-center">
+              <dt className="text-sm font-bold text-amber-700">總金幣</dt>
+              <dd className="mt-1 text-3xl font-black text-amber-950">
+                {playerProgress.totalCoins}
+              </dd>
+            </div>
+            <div className="rounded-2xl bg-violet-50 p-4 text-center">
+              <dt className="text-sm font-bold text-violet-700">
+                已獲得徽章
+              </dt>
+              <dd className="mt-1 text-3xl font-black text-violet-950">
+                {playerProgress.earnedBadges.length} 個
+              </dd>
+            </div>
+            <div className="rounded-2xl bg-blue-50 p-4 text-center">
+              <dt className="text-sm font-bold text-blue-700">完成冒險</dt>
+              <dd className="mt-1 text-3xl font-black text-blue-950">
+                {playerProgress.completedQuests} 次
+              </dd>
+            </div>
+          </dl>
+        </section>
 
         <section className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           {stages.map((stage, index) => (
