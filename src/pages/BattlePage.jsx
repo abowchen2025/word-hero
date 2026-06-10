@@ -184,6 +184,7 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
 
     if (currentQuestionIndex === totalQuestions) {
       onComplete({
+        battleMode,
         score,
         totalQuestions,
         correctCount,

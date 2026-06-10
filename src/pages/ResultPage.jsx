@@ -4,6 +4,7 @@ import {
   getMistakeBook,
   saveMistakesFromHistory,
 } from '../features/review/mistakeBook'
+import { calculateRewards } from '../features/reward/calculateRewards'
 
 const emptyResult = {
   score: 0,
@@ -15,6 +16,7 @@ const emptyResult = {
   maxCombo: 0,
   totalDamage: 0,
   defeatedMonsters: 0,
+  battleMode: 'normal',
 }
 
 function ResultPage({
@@ -26,6 +28,10 @@ function ResultPage({
   onHome,
 }) {
   const battleResult = result ?? emptyResult
+  const resolvedBattleMode =
+    battleResult.battleMode ?? battleResult.mode ?? battleMode
+  const rewards = calculateRewards(battleResult, resolvedBattleMode)
+  const isReviewMode = resolvedBattleMode === 'review'
   const reviewWords = Array.from(
     new Map(
       battleResult.answerHistory
@@ -57,13 +63,13 @@ function ResultPage({
           {battleResult.stars} ★
         </div>
         <p className="mt-6 text-sm font-black tracking-[0.2em] text-blue-600 uppercase">
-          Quest Clear
+          {isReviewMode ? 'Review Results' : 'Quest Clear'}
         </p>
         <h1 className="mt-2 text-4xl font-black text-slate-950">
-          {battleMode === 'review' ? '錯題複習完成！' : '任務完成！'}
+          {isReviewMode ? '錯題複習完成！' : '任務完成！'}
         </h1>
         <p className="mt-4 text-xl font-bold text-slate-600">
-          本次獲得{' '}
+          {isReviewMode ? '本次複習表現：' : '本次獲得 '}
           <span className="text-amber-500">{battleResult.stars} 顆星</span>
         </p>
 
@@ -75,7 +81,7 @@ function ResultPage({
             </dd>
           </div>
           <div className="rounded-2xl bg-emerald-50 p-4">
-            <dt className="text-sm font-bold text-emerald-700">答對題數</dt>
+            <dt className="text-sm font-bold text-emerald-700">首次答對</dt>
             <dd className="mt-1 text-3xl font-black text-slate-950">
               {battleResult.correctCount} / {battleResult.totalQuestions}
             </dd>
@@ -105,6 +111,66 @@ function ResultPage({
             </dd>
           </div>
         </dl>
+
+        {isReviewMode ? (
+          <section className="mt-6 rounded-3xl border-2 border-blue-200 bg-linear-to-br from-blue-50 to-cyan-50 p-5 text-center shadow-lg shadow-blue-100 sm:p-6">
+            <p className="text-xs font-black tracking-[0.2em] text-blue-700 uppercase">
+              Review Progress
+            </p>
+            <h2 className="mt-1 text-2xl font-black text-blue-950">
+              複習結果
+            </h2>
+            <p className="mt-4 rounded-2xl bg-white px-4 py-4 text-lg font-black text-blue-950">
+              {rewards.rewardMessage}
+            </p>
+          </section>
+        ) : (
+          <section className="mt-6 rounded-3xl border-2 border-amber-300 bg-linear-to-br from-amber-50 via-yellow-50 to-orange-50 p-5 text-left shadow-lg shadow-amber-100 sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-black tracking-[0.2em] text-amber-700 uppercase">
+                  Quest Rewards
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-amber-950">
+                  本次獎勵
+                </h2>
+              </div>
+              <div className="rounded-2xl border-2 border-amber-300 bg-white px-5 py-3 text-center shadow-sm">
+                <p className="text-sm font-bold text-amber-700">獲得金幣</p>
+                <p className="mt-1 text-3xl font-black text-amber-950">
+                  🪙 +{rewards.coins}
+                </p>
+              </div>
+            </div>
+
+            <h3 className="mt-6 font-black text-amber-950">獲得徽章</h3>
+            <ul className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {rewards.badges.map((badge) => (
+                <li
+                  key={badge.id}
+                  className="flex items-center gap-3 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm"
+                >
+                  <span
+                    className="grid size-12 shrink-0 place-items-center rounded-full bg-amber-100 text-2xl"
+                    aria-hidden="true"
+                  >
+                    {badge.icon}
+                  </span>
+                  <div>
+                    <p className="font-black text-slate-950">{badge.name}</p>
+                    <p className="mt-1 text-sm font-bold text-slate-600">
+                      {badge.description}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-5 rounded-2xl bg-amber-500 px-4 py-4 text-center text-lg font-black text-amber-950">
+              {rewards.rewardMessage}
+            </p>
+          </section>
+        )}
 
         {reviewWords.length > 0 && (
           <section className="mt-6 rounded-2xl border-2 border-amber-200 bg-amber-50 p-5 text-left">
