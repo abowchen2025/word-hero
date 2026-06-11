@@ -72,6 +72,11 @@ function ResultPage({
         <h1 className="mt-2 text-4xl font-black text-slate-950">
           {isReviewMode ? '錯題複習完成！' : '任務完成！'}
         </h1>
+        {!isReviewMode && (
+          <p className="mt-3 text-lg font-black text-blue-700">
+            完成冒險：{battleResult.stage?.name_zh ?? '入門村'}
+          </p>
+        )}
         <p className="mt-4 text-xl font-bold text-slate-600">
           {isReviewMode ? '本次複習表現：' : '本次獲得 '}
           <span className="text-amber-500">{battleResult.stars} 顆星</span>

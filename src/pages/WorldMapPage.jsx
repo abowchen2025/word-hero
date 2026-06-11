@@ -98,23 +98,34 @@ function WorldMapPage({ onSelectStage, onHome }) {
             <button
               key={stage.id}
               type="button"
-              className={`group min-h-52 rounded-3xl border-2 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${themeClasses[stage.theme]}`}
+              className={`group min-h-52 rounded-3xl border-2 p-6 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${themeClasses[stage.cardTheme]}`}
               onClick={() => onSelectStage(stage)}
             >
               <div className="flex items-start justify-between gap-4">
-                <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-lg font-black shadow-sm">
-                  {stage.badge}
+                <span
+                  className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-3xl shadow-sm"
+                  aria-hidden="true"
+                >
+                  {stage.monster.icon}
                 </span>
-                <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black">
-                  STAGE {index + 1}
-                </span>
+                <div className="flex flex-col items-end gap-2">
+                  <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black">
+                    STAGE {index + 1}
+                  </span>
+                  <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black">
+                    {stage.topicLabel}
+                  </span>
+                </div>
               </div>
               <h2 className="mt-6 text-2xl font-black text-slate-950">
-                {stage.name}
+                {stage.name_zh}
               </h2>
-              <p className="mt-1 text-lg font-bold">{stage.nameZh}</p>
+              <p className="mt-1 text-lg font-bold">{stage.name}</p>
               <p className="mt-3 leading-relaxed text-slate-600">
                 {stage.description}
+              </p>
+              <p className="mt-4 text-sm font-black">
+                挑戰怪物：{stage.monster.name_zh}
               </p>
             </button>
           ))}

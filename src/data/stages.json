@@ -2,33 +2,61 @@
   {
     "id": "starter-village",
     "name": "Starter Village",
-    "nameZh": "入門村",
-    "description": "從生活中最常見的英文單字開始。",
-    "theme": "amber",
-    "badge": "SV"
+    "name_zh": "入門村",
+    "description": "從生活單字開始冒險。",
+    "themes": [],
+    "difficulty": "easy",
+    "topicLabel": "混合練習",
+    "cardTheme": "amber",
+    "monster": {
+      "name": "Practice Slime",
+      "name_zh": "練習史萊姆",
+      "icon": "🟢"
+    }
   },
   {
     "id": "animal-forest",
     "name": "Animal Forest",
-    "nameZh": "動物森林",
+    "name_zh": "動物森林",
     "description": "認識可愛又勇敢的動物夥伴。",
-    "theme": "emerald",
-    "badge": "AF"
+    "themes": ["animals"],
+    "difficulty": "easy",
+    "topicLabel": "動物單字",
+    "cardTheme": "emerald",
+    "monster": {
+      "name": "Forest Owl",
+      "name_zh": "森林貓頭鷹",
+      "icon": "🦉"
+    }
   },
   {
     "id": "food-town",
     "name": "Food Town",
-    "nameZh": "食物小鎮",
+    "name_zh": "食物小鎮",
     "description": "收集餐桌與點心店裡的單字。",
-    "theme": "rose",
-    "badge": "FT"
+    "themes": ["food"],
+    "difficulty": "easy",
+    "topicLabel": "食物單字",
+    "cardTheme": "rose",
+    "monster": {
+      "name": "Hungry Toast",
+      "name_zh": "貪吃吐司",
+      "icon": "🍞"
+    }
   },
   {
     "id": "school-castle",
     "name": "School Castle",
-    "nameZh": "學校城堡",
+    "name_zh": "學校城堡",
     "description": "挑戰每天在學校會用到的英文。",
-    "theme": "blue",
-    "badge": "SC"
+    "themes": ["school"],
+    "difficulty": "easy",
+    "topicLabel": "學校單字",
+    "cardTheme": "blue",
+    "monster": {
+      "name": "Pencil Knight",
+      "name_zh": "鉛筆騎士",
+      "icon": "✏️"
+    }
   }
 ]

@@ -1,4 +1,10 @@
-function MonsterCard({ health = 100, maxHealth = 100 }) {
+function MonsterCard({
+  health = 100,
+  maxHealth = 100,
+  name = 'Word Monster',
+  nameZh = '單字小怪獸',
+  icon = '👾',
+}) {
   const percentage = Math.max(0, Math.min(100, (health / maxHealth) * 100))
   const isInDanger = percentage < 30
 
@@ -17,7 +23,7 @@ function MonsterCard({ health = 100, maxHealth = 100 }) {
           }`}
           aria-hidden="true"
         >
-          👾
+          {icon}
         </div>
         <div>
           <p
@@ -27,7 +33,8 @@ function MonsterCard({ health = 100, maxHealth = 100 }) {
           >
             {isInDanger ? 'Danger' : 'Word Monster'}
           </p>
-          <h2 className="text-xl font-black text-slate-900">單字小怪獸</h2>
+          <h2 className="text-xl font-black text-slate-900">{nameZh}</h2>
+          <p className="text-sm font-bold text-slate-500">{name}</p>
         </div>
       </div>
       <div>

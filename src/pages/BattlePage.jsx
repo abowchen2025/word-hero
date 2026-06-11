@@ -13,8 +13,21 @@ import { useSpeech } from '../hooks/useSpeech'
 const NORMAL_QUESTION_COUNT = 10
 const INITIAL_MONSTER_HP = 100
 
-function createNormalQuestion() {
-  return generateQuestion(starterWords)
+function getStageWordBank(stage) {
+  if (!Array.isArray(stage?.themes) || stage.themes.length === 0) {
+    return starterWords
+  }
+
+  const stageThemes = new Set(stage.themes)
+  const filteredWords = starterWords.filter((word) =>
+    stageThemes.has(word.theme),
+  )
+
+  return filteredWords.length >= 4 ? filteredWords : starterWords
+}
+
+function createNormalQuestion(wordBank) {
+  return generateQuestion(wordBank)
 }
 
 function shuffle(items) {
@@ -31,12 +44,15 @@ function shuffle(items) {
   return shuffledItems
 }
 
-function createBattleSetup(battleMode) {
+function createBattleSetup(battleMode, stage) {
   if (battleMode !== 'review') {
+    const normalWords = getStageWordBank(stage)
+
     return {
+      normalWords,
       reviewWords: [],
       totalQuestions: NORMAL_QUESTION_COUNT,
-      firstQuestion: createNormalQuestion(),
+      firstQuestion: createNormalQuestion(normalWords),
     }
   }
 
@@ -48,6 +64,7 @@ function createBattleSetup(battleMode) {
   ).slice(0, NORMAL_QUESTION_COUNT)
 
   return {
+    normalWords: [],
     reviewWords,
     totalQuestions: reviewWords.length,
     firstQuestion:
@@ -65,8 +82,9 @@ function calculateStars(correctCount, totalQuestions) {
 }
 
 function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
-  const [battleSetup] = useState(() => createBattleSetup(battleMode))
-  const { reviewWords, totalQuestions, firstQuestion } = battleSetup
+  const [battleSetup] = useState(() => createBattleSetup(battleMode, stage))
+  const { normalWords, reviewWords, totalQuestions, firstQuestion } =
+    battleSetup
   const [question, setQuestion] = useState(firstQuestion)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(1)
   const [score, setScore] = useState(0)
@@ -185,6 +203,7 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
     if (currentQuestionIndex === totalQuestions) {
       onComplete({
         battleMode,
+        stage: battleMode === 'review' ? null : stage,
         score,
         totalQuestions,
         correctCount,
@@ -202,7 +221,7 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
     setQuestion(
       battleMode === 'review'
         ? generateQuestion([reviewWords[currentQuestionIndex]], starterWords)
-        : createNormalQuestion(),
+        : createNormalQuestion(normalWords),
     )
     setCurrentQuestionIndex((index) => index + 1)
     setSelectedOption(null)
@@ -281,7 +300,7 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
             <h1 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">
               {battleMode === 'review'
                 ? '錯題複習'
-                : `${stage?.name ?? 'Starter Village'} ${stage?.nameZh ?? '新手村'}`}
+                : `${stage?.name ?? 'Starter Village'} ${stage?.name_zh ?? '入門村'}`}
             </h1>
           </div>
           <button
@@ -323,6 +342,17 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
           <MonsterCard
             health={monsterHp}
             maxHealth={monsterMaxHp}
+            name={
+              battleMode === 'review'
+                ? 'Review Monster'
+                : stage?.monster?.name
+            }
+            nameZh={
+              battleMode === 'review'
+                ? '複習小怪獸'
+                : stage?.monster?.name_zh
+            }
+            icon={battleMode === 'review' ? '👾' : stage?.monster?.icon}
           />
         </section>
 
