@@ -1,16 +1,112 @@
-# React + Vite
+# Word Hero 英文小勇者
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 專案介紹
 
-Currently, two official plugins are available:
+Word Hero 英文小勇者是一款給台灣小學生初學者使用的英文單字勇者闖關遊戲。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+核心目標不是考試，而是讓孩子透過短時間、低壓力、有回饋的遊戲方式，從生活化單字開始建立英文信心。玩家可以在不同主題關卡中練習單字，透過答題、發音、戰鬥回饋、Combo、金幣與徽章，逐步累積學習成就感。
 
-## React Compiler
+## 目標使用者
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* 小學三年級英文初學者
+* 小學五年級但英文基礎仍偏初學的學生
+* 想用遊戲方式複習英文單字的孩子
 
-## Expanding the ESLint configuration
+## 目前功能
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+* 首頁與世界地圖
+* 四個主題關卡
+  * 入門村
+  * 動物森林
+  * 食物小鎮
+  * 學校城堡
+* 題庫與隨機選擇題
+* 看中文選英文
+* 看英文選中文
+* 每關 10 題
+* 分數與星星
+* 英文發音
+* 鍵盤操作
+* 手機與平板觸控優化
+* 勇者 / 怪物戰鬥回饋
+* Combo
+* 本次金幣與徽章
+* 玩家永久進度
+  * 總金幣
+  * 已獲得徽章
+  * 完成冒險次數
+* 錯題本
+* 錯題複習模式
+
+## 技術使用
+
+* React
+* Vite
+* Tailwind CSS
+* JavaScript
+* localStorage
+* 本機 JSON 題庫
+* Web Speech API / SpeechSynthesis
+* Git / GitHub
+
+## 本機執行方式
+
+請先確認本機已安裝 Node.js 與 npm。
+
+```bash
+npm install
+```
+
+安裝專案相依套件。
+
+```bash
+npm run dev
+```
+
+啟動 Vite 開發伺服器，供本機開發與測試使用。
+
+```bash
+npm run lint
+```
+
+執行 ESLint，檢查程式碼品質與潛在問題。
+
+```bash
+npm run build
+```
+
+建立正式環境用的 production build，確認專案可以成功打包。
+
+## 專案資料保存
+
+目前專案使用瀏覽器的 localStorage 保存本機資料：
+
+* `wordHeroMistakeBook`：錯題本，保存玩家答錯或需要複習的單字。
+* `wordHeroPlayerProgress`：玩家永久進度，保存總金幣、已獲得徽章與完成冒險次數。
+
+目前不使用資料庫、不使用登入系統，也不做跨裝置同步。資料會保存在同一台裝置、同一個瀏覽器中；若清除瀏覽器資料，進度也可能被清除。
+
+## 目前不做的功能
+
+* 不使用資料庫
+* 不使用登入
+* 不使用排行榜
+* 不使用後端 API
+* 不使用 react-router
+* 不使用大型動畫套件
+* 不做跨裝置同步
+
+## 後續開發方向
+
+1. 擴充 Starter 1 字庫。
+2. 優化遊戲視覺。
+3. 加入更多題型。
+4. 未來部署到 GitHub Pages。
+5. 長期可評估家長紀錄、教師使用情境或更多學習模式。
+
+## 開發原則
+
+* 每次只做一個小功能。
+* 先讓流程穩定，再逐步擴充。
+* 優先照顧小學生初學者的學習信心。
+* 答錯要有鼓勵，不要變成壓力很大的考試工具。
