@@ -9,6 +9,7 @@ import { generateQuestion } from '../features/quiz/generateQuestion'
 import { getMistakeBook } from '../features/review/mistakeBook'
 import { useKeyboardControls } from '../hooks/useKeyboardControls'
 import { useSpeech } from '../hooks/useSpeech'
+import './BattlePage.css'
 
 const NORMAL_QUESTION_COUNT = 10
 const INITIAL_MONSTER_HP = 100
@@ -266,20 +267,20 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
 
   if (!question) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-linear-to-b from-blue-50 to-slate-100 px-5 py-12">
-        <section className="w-full max-w-xl rounded-3xl border-2 border-blue-200 bg-white p-7 text-center shadow-xl shadow-blue-100 sm:p-10">
-          <p className="text-sm font-black tracking-[0.2em] text-blue-600 uppercase">
+      <main className="battle-page battle-empty">
+        <section className="battle-panel w-full max-w-xl p-7 text-center sm:p-10">
+          <p className="battle-eyebrow">
             Review Quest
           </p>
-          <h1 className="mt-3 text-3xl font-black text-slate-950">
+          <h1 className="mt-3 text-3xl font-black">
             目前沒有錯題
           </h1>
-          <p className="mt-4 text-lg font-bold text-slate-600">
+          <p className="battle-muted mt-4 text-lg font-bold">
             先去完成一關冒險吧！
           </p>
           <button
             type="button"
-            className="mt-7 min-h-16 w-full touch-manipulation rounded-2xl bg-blue-600 px-6 py-4 text-lg font-black text-white hover:bg-blue-700 active:bg-blue-800"
+            className="battle-button battle-next mt-7 w-full"
             onClick={onBack}
           >
             回世界地圖
@@ -290,14 +291,14 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
   }
 
   return (
-    <main className="min-h-screen bg-linear-to-b from-blue-50 to-slate-100 px-5 py-6 sm:py-10">
-      <div className="mx-auto max-w-5xl">
-        <header className="mb-6 flex items-center justify-between gap-4">
+    <main className="battle-page">
+      <div className="battle-layout">
+        <header className="battle-header">
           <div>
-            <p className="text-xs font-black tracking-[0.2em] text-blue-600 uppercase">
+            <p className="battle-eyebrow">
               {battleMode === 'review' ? 'Review Quest' : 'Current Quest'}
             </p>
-            <h1 className="mt-1 text-xl font-black text-slate-950 sm:text-2xl">
+            <h1 className="mt-1 text-xl font-black sm:text-2xl">
               {battleMode === 'review'
                 ? '錯題複習'
                 : `${stage?.name ?? 'Starter Village'} ${stage?.name_zh ?? '入門村'}`}
@@ -305,40 +306,44 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
           </div>
           <button
             type="button"
-            className="min-h-12 rounded-xl border-2 border-slate-300 bg-white px-4 py-2 font-bold text-slate-700 hover:bg-slate-50"
+            className="battle-button battle-back"
             onClick={onBack}
           >
             返回地圖
           </button>
         </header>
 
-        <section className="mb-6 rounded-3xl border-2 border-blue-200 bg-white p-5 shadow-lg shadow-blue-100">
-          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 font-black">
-            <p className="text-lg text-slate-950">
-              第 {currentQuestionIndex} / {totalQuestions} 題
-            </p>
-            <div className="flex gap-5 text-sm sm:text-base">
-              <p className="text-blue-700">分數：{score}</p>
-              <p className="text-emerald-700">答對：{correctCount}</p>
+        <div className="battle-status">
+          <div className="battle-hero">
+            <HeroCard combo={combo} maxCombo={maxCombo} />
+          </div>
+          <section className="battle-panel battle-progress">
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 font-black">
+              <p className="text-lg">
+                第 {currentQuestionIndex} / {totalQuestions} 題
+              </p>
+              <div className="flex gap-5 text-sm sm:text-base">
+                <p className="battle-gold">分數：{score}</p>
+                <p className="battle-mint">答對：{correctCount}</p>
+              </div>
             </div>
-          </div>
-          <div
-            className="mt-4 h-4 overflow-hidden rounded-full bg-slate-200"
-            role="progressbar"
-            aria-label="關卡進度"
-            aria-valuemin="0"
-            aria-valuemax={totalQuestions}
-            aria-valuenow={currentQuestionIndex}
-          >
             <div
-              className="h-full rounded-full bg-linear-to-r from-blue-500 to-amber-400 transition-[width]"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </section>
+              className="battle-progress-track"
+              role="progressbar"
+              aria-label="關卡進度"
+              aria-valuemin="0"
+              aria-valuemax={totalQuestions}
+              aria-valuenow={currentQuestionIndex}
+            >
+              <div
+                className="battle-progress-fill"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </section>
+        </div>
 
-        <section className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          <HeroCard combo={combo} maxCombo={maxCombo} />
+        <section className="battle-scene" aria-label="怪物戰鬥場景">
           <MonsterCard
             health={monsterHp}
             maxHealth={monsterMaxHp}
@@ -357,12 +362,12 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
         </section>
 
         <section
-          className={`mt-5 min-h-20 rounded-3xl border-2 p-4 text-center ${
+          className={`battle-message ${
             battleMessage
               ? answeredCorrectly
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-                : 'border-amber-200 bg-amber-50 text-amber-900'
-              : 'border-slate-200 bg-white/80 text-slate-500'
+                ? 'battle-success'
+                : 'battle-retry'
+              : 'battle-muted'
           }`}
           aria-live="polite"
         >
@@ -375,26 +380,26 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
           </div>
         </section>
 
-        <div className="mt-6">
+        <div className="battle-command">
           <QuestionCard prompt={question.prompt}>
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="battle-command-toolbar">
               <button
                 type="button"
-                className="min-h-16 touch-manipulation rounded-2xl bg-violet-600 px-6 py-4 text-lg font-black text-white shadow-lg shadow-violet-200 hover:bg-violet-700 active:bg-violet-800 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none"
+                className="battle-button battle-speech"
                 onClick={speakCurrentWord}
                 disabled={!isSpeechSupported}
               >
                 {isSpeaking ? '播放中…' : '聽發音'}
               </button>
 
-              <div className="hidden flex-wrap justify-end gap-2 text-xs font-bold text-slate-600 sm:flex">
-                <span className="rounded-lg bg-white/80 px-3 py-2">
+              <div className="battle-shortcuts">
+                <span>
                   按 1～4 選答案
                 </span>
-                <span className="rounded-lg bg-white/80 px-3 py-2">
+                <span>
                   Enter {currentQuestionIndex === totalQuestions ? '完成任務' : '下一題'}
                 </span>
-                <span className="rounded-lg bg-white/80 px-3 py-2">
+                <span>
                   Space 重播發音
                 </span>
               </div>
@@ -402,14 +407,14 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
 
             {!isSpeechSupported && (
               <p
-                className="mb-4 rounded-2xl bg-slate-100 px-4 py-3 text-center font-bold text-slate-600"
+                className="battle-muted mb-4 px-4 py-3 text-center font-bold"
                 role="status"
               >
                 你的瀏覽器目前不支援發音功能
               </p>
             )}
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="battle-answers">
               {question.options.map((option, optionIndex) => (
                 <AnswerOption
                   key={option.id}
@@ -423,12 +428,12 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
             </div>
 
             <div
-              className={`mt-5 min-h-14 rounded-2xl p-4 text-center font-bold ${
+              className={`battle-feedback ${
                 feedback
                   ? answeredCorrectly
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-rose-100 text-rose-800'
-                  : 'bg-white/70 text-slate-500'
+                    ? 'battle-success'
+                    : 'battle-retry'
+                  : 'battle-muted'
               }`}
               aria-live="polite"
             >
@@ -438,7 +443,7 @@ function BattlePage({ stage, battleMode = 'normal', onComplete, onBack }) {
             {answeredCorrectly && (
               <button
                 type="button"
-                className="mt-5 min-h-16 w-full touch-manipulation rounded-2xl bg-blue-600 px-6 py-4 text-lg font-black text-white shadow-lg shadow-blue-200 hover:bg-blue-700 active:bg-blue-800 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+                className="battle-button battle-next mt-4 w-full"
                 onClick={handleNextQuestion}
               >
                 {currentQuestionIndex === totalQuestions
